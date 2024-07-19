@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cifrado Híbrido</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Cifrado Híbrido</h1>
+
+    <div class="section" id="keys-section">
+        <h3>Claves:</h3>
+        <p><strong>Clave pública:</strong> <span id="publicKey"></span></p>
+        <p><strong>Clave privada:</strong> <span id="privateKey"></span></p>
+        <button onclick="exportKeys()">Exportar Claves</button>
+        <input type="file" id="fileInput" onchange="importKeys(event)" style="display: none;">
+        <button onclick="document.getElementById('fileInput').click()">Importar Claves</button>
+        <button onclick="deleteKeys()">Eliminar Claves</button>
+    </div>
+
+    <div class="section" id="encryption-section">
+        <input type="email" id="email" placeholder="Introduce tu email">
+        <textarea id="message" placeholder="Escribe tu mensaje aquí"></textarea><br>
+        <button onclick="encryptMessage()">Cifrar Mensaje</button>
+        <p><strong>Mensaje Cifrado:</strong> <span id="encryptedMessage"></span></p>
+        <p><strong>IV:</strong> <span id="iv"></span></p>
+        <p><strong>Encrypted AES Key:</strong> <span id="encryptedAESKey"></span></p>
+    </div>
+
+    <div class="section" id="decryption-section">
+        <button onclick="decryptMessage()">Descifrar Mensaje</button>
+        <p><strong>Mensaje Descifrado:</strong> <span id="decryptedMessage"></span></p>
+    </div>
+
+    <div class="section" id="messages-section">
+        <h3>Mensajes almacenados:</h3>
+        <ul id="messagesList"></ul>
+    </div>
+</div>
+<script src="crypto.js"></script>
+<script src="api.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+curl -X POST http://your-server-url/api/store.php \
+     -H "Content-Type: application/json" \
+     -d '{
+           "email": "user@example.com",
+           "texto": "Este es el texto a almacenar",
+           "clave_publica": "miClavePublica"
+         }'
