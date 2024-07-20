@@ -61,6 +61,19 @@ async function decryptRSAKey(encryptedKeyData, password) {
     return JSON.parse(dec.decode(decrypted));
 }
 
+async function generateFingerprint(key, type) {
+    let exported;
+    if (type === "public") {
+        exported = await window.crypto.subtle.exportKey("spki", key);
+    } else if (type === "private") {
+        exported = await window.crypto.subtle.exportKey("pkcs8", key);
+    }
+    const hash = await window.crypto.subtle.digest("SHA-256", exported);
+    return Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
+
 async function generateKeys(password) {
     const keyPair = await window.crypto.subtle.generateKey(
         {
@@ -82,10 +95,11 @@ async function generateKeys(password) {
     localStorage.setItem('publicKey', JSON.stringify(encryptedPublicKey));
     localStorage.setItem('privateKey', JSON.stringify(encryptedPrivateKey));
 
-    const publicKeyData = await window.crypto.subtle.exportKey("jwk", publicKey);
-    const privateKeyData = await window.crypto.subtle.exportKey("jwk", privateKey);
-    document.getElementById('publicKey').textContent = `alg: ${publicKeyData.alg}`;
-    document.getElementById('privateKey').textContent = `alg: ${privateKeyData.alg}`;
+    const publicKeyFingerprint = await generateFingerprint(publicKey, "public");
+    const privateKeyFingerprint = await generateFingerprint(privateKey, "private");
+
+    document.getElementById('publicKey').textContent = `Fingerprint: ${publicKeyFingerprint}`;
+    document.getElementById('privateKey').textContent = `Fingerprint: ${privateKeyFingerprint}`;
 }
 
 async function loadKeys(password) {
@@ -99,8 +113,11 @@ async function loadKeys(password) {
         publicKey = await importKey(publicKeyData, "encrypt");
         privateKey = await importKey(privateKeyData, "decrypt");
 
-        document.getElementById('publicKey').textContent = `alg: ${publicKeyData.alg}`;
-        document.getElementById('privateKey').textContent = `alg: ${privateKeyData.alg}`;
+        const publicKeyFingerprint = await generateFingerprint(publicKey, "public");
+        const privateKeyFingerprint = await generateFingerprint(privateKey, "private");
+
+        document.getElementById('publicKey').textContent = `Fingerprint: ${publicKeyFingerprint}`;
+        document.getElementById('privateKey').textContent = `Fingerprint: ${privateKeyFingerprint}`;
     } else {
         await generateKeys(password);
     }
@@ -155,8 +172,14 @@ async function importKeys(event) {
             const publicKeyData = await decryptRSAKey(JSON.parse(keysData.publicKey), prompt('Introduce tu contraseña para descifrar la clave pública:'));
             const privateKeyData = await decryptRSAKey(JSON.parse(keysData.privateKey), prompt('Introduce tu contraseña para descifrar la clave privada:'));
 
-            document.getElementById('publicKey').textContent = `alg: ${publicKeyData.alg}`;
-            document.getElementById('privateKey').textContent = `alg: ${privateKeyData.alg}`;
+            publicKey = await importKey(publicKeyData, "encrypt");
+            privateKey = await importKey(privateKeyData, "decrypt");
+
+            const publicKeyFingerprint = await generateFingerprint(publicKey, "public");
+            const privateKeyFingerprint = await generateFingerprint(privateKey, "private");
+
+            document.getElementById('publicKey').textContent = `Fingerprint: ${publicKeyFingerprint}`;
+            document.getElementById('privateKey').textContent = `Fingerprint: ${privateKeyFingerprint}`;
         } catch (error) {
             console.error('Error en importKeys:', error);
             alert('Error en importKeys: ' + error.message);
