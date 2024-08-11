@@ -17,7 +17,7 @@ function storeMessage() {
     $input = file_get_contents('php://input');
     $data = json_decode($input, true);
 
-    if (!isset($data['email']) || !isset($data['texto']) || !isset($data['iv']) || !isset($data['encryptedAESKey'])) {
+    if (!isset($data['email']) || !isset($data['texto']) || !isset($data['iv']) || !isset($data['encryptedAESKey']) || !isset($data['description'])) {
         echo json_encode(['status' => 'error', 'message' => 'Datos incompletos.']);
         return;
     }
@@ -26,6 +26,7 @@ function storeMessage() {
     $texto = $data['texto'];
     $iv = $data['iv'];
     $encryptedAESKey = $data['encryptedAESKey'];
+    $description = $data['description'];
     $hash_texto = sha1($texto);
     $filename = $email . $hash_texto . '.txt';
     $directory = 'data/';
@@ -38,7 +39,8 @@ function storeMessage() {
         'iv' => $iv,
         'encryptedAESKey' => $encryptedAESKey,
         'texto' => $texto,
-        'email' => $email
+        'email' => $email,
+        'description' => $description  // Guardar la descripción
     ]);
 
     $file_path = $directory . $filename;
@@ -52,14 +54,7 @@ function storeMessage() {
 
 // Función para listar mensajes del usuario
 function listMessages() {
-    if (!isset($_GET['email'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Email no proporcionado.']);
-        return;
-    }
-
-    $email = $_GET['email'];
     $directory = 'data/';
-    $result = [];
 
     if (!is_dir($directory)) {
         echo json_encode(['status' => 'error', 'message' => 'Directorio de datos no encontrado.']);
@@ -67,22 +62,23 @@ function listMessages() {
     }
 
     $files = scandir($directory);
-    $files = array_filter($files, function($file) use ($directory, $email) {
-        $file_content = @file_get_contents($directory . $file);
-        $data = json_decode($file_content, true);
-        return !is_dir($directory . $file) && isset($data['email']) && $data['email'] === $email;
+    $files = array_filter($files, function($file) use ($directory) {
+        return !is_dir($directory . $file);
     });
 
+    $result = [];
+
     foreach ($files as $file) {
-        $file_content = @file_get_contents($directory . $file);
+        $file_content = file_get_contents($directory . $file);
         $data = json_decode($file_content, true);
 
-        if (isset($data['email']) && isset($data['texto']) && isset($data['iv']) && isset($data['encryptedAESKey'])) {
+        if (isset($data['email']) && isset($data['texto']) && isset($data['iv']) && isset($data['encryptedAESKey']) && isset($data['description'])) {
             $result[] = [
                 'email' => $data['email'],
                 'texto' => $data['texto'],
                 'iv' => $data['iv'],
-                'encryptedAESKey' => $data['encryptedAESKey']
+                'encryptedAESKey' => $data['encryptedAESKey'],
+                'description' => $data['description']  // Incluir la descripción en la respuesta
             ];
         }
     }

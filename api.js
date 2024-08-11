@@ -2,8 +2,7 @@
 async function loadStoredMessages() {
     const email = document.getElementById('email').value;
     if (!email) {
-        alert('Por favor, inicia sesión para ver tus notas.');
-        return;
+        return;  // No hacer nada si no hay un email definido
     }
 
     const response = await fetch(`http://localhost:8000/api/list?email=${email}`);
@@ -13,7 +12,7 @@ async function loadStoredMessages() {
 
     storedMessages.forEach((message, index) => {
         const listItem = document.createElement('li');
-        listItem.textContent = `Mensaje ${index + 1}: ${message.texto}`;
+        listItem.textContent = `Descripción: ${message.description} - Mensaje ${index + 1}`;
         listItem.addEventListener('click', () => {
             document.getElementById('encryptedMessage').textContent = message.texto;
 
@@ -74,60 +73,8 @@ async function registerUser() {
     }
 }
 
-async function login() {
-    const email = document.getElementById('login-email').value;
-    if (!email) {
-        alert('Por favor, introduce tu email.');
-        return;
-    }
-
-    // Obtener la clave pública desde el servidor
-    const response = await fetch(`http://localhost:8000/api/getPublicKey?email=${email}`);
-    const result = await response.json();
-
-    if (!result.publicKey) {
-        alert('El usuario no está registrado.');
-        return;
-    }
-
-    const serverPublicKeyJwk = result.publicKey;
-
-    // Solicitar la contraseña para desbloquear la clave privada local
-    const password = prompt('Introduce tu contraseña para desbloquear la clave privada:');
-    await loadKeys(password);
-
-    // Exportar la clave pública local
-    const localPublicKeyJwk = await window.crypto.subtle.exportKey('jwk', publicKey);
-
-    // Comparar las claves públicas
-    if (JSON.stringify(serverPublicKeyJwk) === JSON.stringify(localPublicKeyJwk)) {
-        alert('Inicio de sesión exitoso.');
-        document.getElementById('email').value = email;
-
-        // Ocultar los formularios de login y registro
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('registration-section').style.display = 'none';
-
-        // Mostrar las secciones protegidas
-        document.getElementById('keys-section').style.display = 'block';
-        document.getElementById('encryption-section').style.display = 'block';
-        document.getElementById('decryption-section').style.display = 'block';
-        document.getElementById('messages-section').style.display = 'block';
-
-        // Cargar las notas del usuario
-        loadStoredMessages();
-    } else {
-        alert('Las claves no coinciden. Verifica que usaste la contraseña correcta.');
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadStoredMessages();
-});
-
 // Exponer las funciones necesarias al ámbito global
 window.exportKeys = exportKeys;
 window.importKeys = importKeys;
 window.deleteKeys = deleteKeys;
 window.registerUser = registerUser;
-window.login = login;

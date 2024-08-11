@@ -4,6 +4,27 @@
     <meta charset="UTF-8">
     <title>Cifrado Híbrido</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo para el botón de cerrar sesión */
+        #logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            width: 200px;
+            font-size: 14px;
+            background-color: #f44336; /* Color rojo para el botón */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        #logout-button:hover {
+            background-color: #d32f2f; /* Color más oscuro al pasar el mouse */
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -14,6 +35,9 @@
             <option value="en">English</option>
         </select>
     </div>
+
+    <!-- Botón de Cerrar Sesión -->
+    <button id="logout-button" onclick="logout()">Cerrar Sesión</button>
 
     <h1 id="page-title">Cifrado Híbrido</h1>
 
@@ -45,9 +69,10 @@
     <!-- Sección Cifrado (solo visible si está logueado) -->
     <div class="section" id="encryption-section" style="display:none;">
         <h3 id="encryption-section-title">Cifrado:</h3>
-        <input type="email" id="email" placeholder="Introduce tu email">
-        <input type="email" id="recipient-email" placeholder="Email del destinatario (opcional)">
-        <textarea id="message" placeholder="Escribe tu mensaje aquí"></textarea><br>
+        <input type="email" id="email" placeholder="Introduce tu email" class="input-field">
+        <input type="email" id="recipient-email" placeholder="Email del destinatario (opcional)" class="input-field">
+        <input type="text" id="message-description" placeholder="Descripción del mensaje (no cifrada)" class="input-field">
+        <textarea id="message" placeholder="Escribe tu mensaje aquí" class="input-field"></textarea><br>
         <button id="encrypt-message-button" onclick="encryptMessage()">Cifrar Mensaje</button>
         <p><strong id="encrypted-message-label">Mensaje Cifrado:</strong> <span id="encryptedMessage"></span></p>
         <p><strong id="iv-label">IV:</strong> <span id="iv"></span></p>
@@ -70,6 +95,7 @@
     </div>
 </div>
 
+<script src="auth.js"></script> <!-- Nuevo archivo con el código de login y registro -->
 <script src="keys.js"></script>
 <script src="crypto.js"></script>
 <script src="api.js"></script>
