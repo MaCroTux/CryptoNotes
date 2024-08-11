@@ -14,9 +14,11 @@ async function loadStoredMessages() {
             // Verificamos que el IV y la Encrypted AES Key están en formato correcto
             const ivBase64 = message.iv;
             const encryptedAESKeyBase64 = message.encryptedAESKey;
+            const shortenedKey = shortenKey(encryptedAESKeyBase64);
 
             document.getElementById('iv').textContent = ivBase64;
-            document.getElementById('encryptedAESKey').textContent = encryptedAESKeyBase64;
+            //document.getElementById('encryptedAESKey').textContent = encryptedAESKeyBase64;
+            document.getElementById('encryptedAESKey').textContent = shortenedKey;
         });
         messagesList.appendChild(listItem);
     });

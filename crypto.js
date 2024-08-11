@@ -1,3 +1,9 @@
+function shortenKey(keyBase64, length = 32) {
+    if (keyBase64.length <= length) return keyBase64;
+    const halfLength = Math.floor(length / 2);
+    return keyBase64.slice(0, halfLength) + '...' + keyBase64.slice(-halfLength);
+}
+
 async function generateAESKey() {
     return await window.crypto.subtle.generateKey(
         {
@@ -80,6 +86,7 @@ async function encryptMessage() {
     );
 
     const encryptedAESKeyBase64 = arrayBufferToBase64(encryptedAESKey);
+    const shortenedKey = shortenKey(encryptedAESKeyBase64);
     const ivBase64 = arrayBufferToBase64(iv);
 
     const encryptedData = {
@@ -92,7 +99,8 @@ async function encryptMessage() {
 
     document.getElementById('encryptedMessage').textContent = encryptedData.texto;
     document.getElementById('iv').textContent = encryptedData.iv;
-    document.getElementById('encryptedAESKey').textContent = encryptedData.encryptedAESKey;
+    //document.getElementById('encryptedAESKey').textContent = encryptedData.encryptedAESKey;
+    document.getElementById('encryptedAESKey').textContent = shortenedKey;
 
     // Enviar el mensaje cifrado a la API
     await storeMessage(encryptedData);
