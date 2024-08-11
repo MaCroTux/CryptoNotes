@@ -52,65 +52,92 @@ function base64ToArrayBuffer(base64) {
 }
 
 async function encryptMessage() {
-    const password = prompt('Introduce tu contraseña para cifrar:');
-    await loadKeys(password);
+    const encryptButton = document.getElementById('encrypt-message-button');
 
-    const message = document.getElementById('message').value;
-    const email = document.getElementById('email').value;
-    if (!email) {
-        alert("Por favor, introduce tu email.");
-        return;
+    // Deshabilitar el botón para evitar múltiples clics
+    encryptButton.disabled = true;
+
+    try {
+        const senderEmail = document.getElementById('email').value;
+        const recipientEmail = document.getElementById('recipient-email').value;
+        const message = document.getElementById('message').value;
+
+        if (!senderEmail || !message) {
+            alert('Por favor, introduce tu email y mensaje.');
+            encryptButton.disabled = false;  // Reactivar el botón en caso de error
+            return;
+        }
+
+        let recipientPublicKey;
+        if (recipientEmail) {
+            // Obtener la clave pública del destinatario
+            const response = await fetch(`http://localhost:8000/api/getPublicKey?email=${recipientEmail}`);
+            const result = await response.json();
+
+            if (result.publicKey) {
+                recipientPublicKey = await window.crypto.subtle.importKey(
+                    'jwk',
+                    result.publicKey,
+                    {
+                        name: "RSA-OAEP",
+                        hash: { name: "SHA-256" }
+                    },
+                    true,
+                    ["encrypt"]
+                );
+            } else {
+                alert('El destinatario no está registrado.');
+                encryptButton.disabled = false;  // Reactivar el botón en caso de error
+                return;
+            }
+        } else {
+            recipientPublicKey = publicKey; // Usar la clave pública del usuario si no hay destinatario
+        }
+
+        const aesKey = await generateAESKey();
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+        const encryptedMessage = await window.crypto.subtle.encrypt(
+            {
+                name: "AES-GCM",
+                iv: iv
+            },
+            aesKey,
+            new TextEncoder().encode(message)
+        );
+
+        const rawAESKey = await exportAESKey(aesKey);
+        const encryptedAESKey = await window.crypto.subtle.encrypt(
+            {
+                name: "RSA-OAEP"
+            },
+            recipientPublicKey,
+            rawAESKey
+        );
+
+        const encryptedData = {
+            iv: arrayBufferToBase64(iv),
+            encryptedAESKey: arrayBufferToBase64(encryptedAESKey),
+            texto: btoa(String.fromCharCode(...new Uint8Array(encryptedMessage))),
+            email: recipientEmail || senderEmail, // Asociar con el email del destinatario si existe
+            clave_publica: JSON.stringify(await window.crypto.subtle.exportKey("jwk", recipientPublicKey))
+        };
+
+        // Enviar el mensaje cifrado a la API
+        await storeMessage(encryptedData);
+
+        // Recargar la lista de mensajes
+        loadStoredMessages();
+
+        // Mostrar mensaje de éxito y reactivar el botón
+        alert('Mensaje cifrado y almacenado exitosamente.');
+    } catch (error) {
+        console.error('Error al cifrar el mensaje:', error);
+        alert('Hubo un error al cifrar el mensaje.');
+    } finally {
+        // Reactivar el botón
+        encryptButton.disabled = false;
     }
-    const enc = new TextEncoder();
-    const encodedMessage = enc.encode(message);
-
-    const aesKey = await generateAESKey();
-    const iv = window.crypto.getRandomValues(new Uint8Array(12)); // Generación del IV
-
-    const encryptedMessage = await window.crypto.subtle.encrypt(
-        {
-            name: "AES-GCM",
-            iv: iv // Uso del IV en el cifrado
-        },
-        aesKey,
-        encodedMessage
-    );
-
-    const rawAESKey = await exportAESKey(aesKey);
-    const encryptedAESKey = await window.crypto.subtle.encrypt(
-        {
-            name: "RSA-OAEP"
-        },
-        publicKey,
-        rawAESKey
-    );
-
-    // Convertir IV y AES Key a Base64 antes de almacenarlos
-    const encryptedAESKeyBase64 = arrayBufferToBase64(encryptedAESKey);
-    const ivBase64 = arrayBufferToBase64(iv);
-
-    const shortenedKey = shortenKey(encryptedAESKeyBase64);
-
-    const encryptedData = {
-        iv: ivBase64, // Guardar en Base64
-        encryptedAESKey: encryptedAESKeyBase64, // Guardar en Base64
-        shortenedAESKey: shortenedKey, // Guardar clave abreviada para mostrar
-        texto: btoa(String.fromCharCode(...new Uint8Array(encryptedMessage))),
-        email: email,
-        clave_publica: JSON.stringify(await window.crypto.subtle.exportKey("jwk", publicKey))
-    };
-
-    // Mostrar clave abreviada en la interfaz de usuario
-    document.getElementById('encryptedMessage').textContent = encryptedData.texto;
-    document.getElementById('iv').textContent = encryptedData.iv;
-    document.getElementById('encryptedAESKey').textContent = encryptedData.shortenedAESKey;
-    document.getElementById('fullEncryptedAESKey').textContent = encryptedData.encryptedAESKey; // Oculto
-
-    // Enviar el mensaje cifrado a la API
-    await storeMessage(encryptedData);
-
-    // Recargar la lista de mensajes
-    loadStoredMessages();
 }
 
 async function decryptMessage() {
