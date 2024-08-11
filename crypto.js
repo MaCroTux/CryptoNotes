@@ -25,12 +25,32 @@ async function importAESKey(rawKey) {
     );
 }
 
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+function base64ToArrayBuffer(base64) {
+    const binary_string = window.atob(base64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
 async function encryptMessage() {
     const password = prompt('Introduce tu contraseña para cifrar:');
     await loadKeys(password);
 
     const message = document.getElementById('message').value;
-    const email = document.getElementById('email').value; // Obtener el email desde el campo de entrada
+    const email = document.getElementById('email').value;
     if (!email) {
         alert("Por favor, introduce tu email.");
         return;
@@ -59,17 +79,20 @@ async function encryptMessage() {
         rawAESKey
     );
 
+    const encryptedAESKeyBase64 = arrayBufferToBase64(encryptedAESKey);
+    const ivBase64 = arrayBufferToBase64(iv);
+
     const encryptedData = {
-        iv: Array.from(iv), // Almacenamiento del IV
-        encryptedAESKey: Array.from(new Uint8Array(encryptedAESKey)),
+        iv: ivBase64,
+        encryptedAESKey: encryptedAESKeyBase64,
         texto: btoa(String.fromCharCode(...new Uint8Array(encryptedMessage))),
         email: email,
         clave_publica: JSON.stringify(await window.crypto.subtle.exportKey("jwk", publicKey))
     };
 
     document.getElementById('encryptedMessage').textContent = encryptedData.texto;
-    document.getElementById('iv').textContent = JSON.stringify(encryptedData.iv); // Mostrar el IV
-    document.getElementById('encryptedAESKey').textContent = JSON.stringify(encryptedData.encryptedAESKey); // Mostrar la clave AES cifrada
+    document.getElementById('iv').textContent = encryptedData.iv;
+    document.getElementById('encryptedAESKey').textContent = encryptedData.encryptedAESKey;
 
     // Enviar el mensaje cifrado a la API
     await storeMessage(encryptedData);
@@ -83,18 +106,18 @@ async function decryptMessage() {
     await loadKeys(password);
 
     try {
-        const ivString = document.getElementById('iv').textContent;
+        const ivBase64 = document.getElementById('iv').textContent;
         const encryptedMessageString = document.getElementById('encryptedMessage').textContent;
-        const encryptedAESKeyString = document.getElementById('encryptedAESKey').textContent;
+        const encryptedAESKeyBase64 = document.getElementById('encryptedAESKey').textContent;
 
-        if (!ivString || !encryptedMessageString || !encryptedAESKeyString) {
+        if (!ivBase64 || !encryptedMessageString || !encryptedAESKeyBase64) {
             throw new Error('Faltan datos necesarios para el descifrado');
         }
 
         const encryptedData = {
-            iv: JSON.parse(ivString),
+            iv: base64ToArrayBuffer(ivBase64),
             texto: encryptedMessageString,
-            encryptedAESKey: JSON.parse(encryptedAESKeyString)
+            encryptedAESKey: base64ToArrayBuffer(encryptedAESKeyBase64)
         };
 
         const iv = new Uint8Array(encryptedData.iv);
