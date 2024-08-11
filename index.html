@@ -1,45 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cifrado Híbrido</title>
+    <title id="document-title">Cifrado Híbrido</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
-    <h1>Cifrado Híbrido</h1>
+    <div class="language-selector">
+        <label for="language-selector">Idioma:</label>
+        <select id="language-selector">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+
+    <h1 id="page-title">Cifrado Híbrido</h1>
 
     <div class="section" id="keys-section">
-        <h3>Claves:</h3>
-        <p><strong>Clave pública:</strong> <span id="publicKey"></span></p>
-        <p><strong>Clave privada:</strong> <span id="privateKey"></span></p>
-        <button onclick="exportKeys()">Exportar Claves</button>
+        <h3 id="keys-section-title">Claves:</h3>
+        <p><strong id="public-key-label">Clave Pública:</strong> <span id="publicKey"></span></p>
+        <p><strong id="private-key-label">Clave Privada:</strong> <span id="privateKey"></span></p>
+        <button id="export-keys-button" onclick="exportKeys()">Exportar Claves</button>
         <input type="file" id="fileInput" onchange="importKeys(event)" style="display: none;">
-        <button onclick="document.getElementById('fileInput').click()">Importar Claves</button>
-        <button onclick="deleteKeys()">Eliminar Claves</button>
+        <button id="import-keys-button" onclick="document.getElementById('fileInput').click()">Importar Claves</button>
+        <button id="delete-keys-button" onclick="deleteKeys()">Eliminar Claves</button>
     </div>
 
     <div class="section" id="encryption-section">
+        <h3 id="encryption-section-title">Cifrado:</h3>
         <input type="email" id="email" placeholder="Introduce tu email">
         <textarea id="message" placeholder="Escribe tu mensaje aquí"></textarea><br>
-        <button onclick="encryptMessage()">Cifrar Mensaje</button>
-        <p><strong>Mensaje Cifrado:</strong> <span id="encryptedMessage"></span></p>
-        <p><strong>IV:</strong> <span id="iv"></span></p>
-        <p><strong>Encrypted AES Key:</strong> <span id="encryptedAESKey"></span></p>
+        <button id="encrypt-message-button" onclick="encryptMessage()">Cifrar Mensaje</button>
+        <p><strong id="encrypted-message-label">Mensaje Cifrado:</strong> <span id="encryptedMessage"></span></p>
+        <p><strong id="iv-label">IV:</strong> <span id="iv"></span></p>
+        <p><strong id="encrypted-aes-key-label">Clave AES Cifrada:</strong> <span id="encryptedAESKey"></span></p>
     </div>
 
     <div class="section" id="decryption-section">
-        <button onclick="decryptMessage()">Descifrar Mensaje</button>
-        <p><strong>Mensaje Descifrado:</strong> <span id="decryptedMessage"></span></p>
+        <h3 id="decryption-section-title">Descifrado:</h3>
+        <button id="decrypt-message-button" onclick="decryptMessage()">Descifrar Mensaje</button>
+        <p><strong id="decrypted-message-label">Mensaje Descifrado:</strong> <span id="decryptedMessage"></span></p>
     </div>
 
     <div class="section" id="messages-section">
-        <h3>Mensajes almacenados:</h3>
+        <h3 id="messages-section-title">Mensajes almacenados:</h3>
         <ul id="messagesList"></ul>
     </div>
 </div>
 <script src="keys.js"></script>
 <script src="crypto.js"></script>
 <script src="api.js"></script>
+<script src="translations.js"></script>
 </body>
 </html>
