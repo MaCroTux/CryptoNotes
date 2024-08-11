@@ -85,22 +85,26 @@ async function encryptMessage() {
         rawAESKey
     );
 
+    // Convertir IV y AES Key a Base64 antes de almacenarlos
     const encryptedAESKeyBase64 = arrayBufferToBase64(encryptedAESKey);
-    const shortenedKey = shortenKey(encryptedAESKeyBase64);
     const ivBase64 = arrayBufferToBase64(iv);
 
+    const shortenedKey = shortenKey(encryptedAESKeyBase64);
+
     const encryptedData = {
-        iv: ivBase64,
-        encryptedAESKey: encryptedAESKeyBase64,
+        iv: ivBase64, // Guardar en Base64
+        encryptedAESKey: encryptedAESKeyBase64, // Guardar en Base64
+        shortenedAESKey: shortenedKey, // Guardar clave abreviada para mostrar
         texto: btoa(String.fromCharCode(...new Uint8Array(encryptedMessage))),
         email: email,
         clave_publica: JSON.stringify(await window.crypto.subtle.exportKey("jwk", publicKey))
     };
 
+    // Mostrar clave abreviada en la interfaz de usuario
     document.getElementById('encryptedMessage').textContent = encryptedData.texto;
     document.getElementById('iv').textContent = encryptedData.iv;
-    //document.getElementById('encryptedAESKey').textContent = encryptedData.encryptedAESKey;
-    document.getElementById('encryptedAESKey').textContent = shortenedKey;
+    document.getElementById('encryptedAESKey').textContent = encryptedData.shortenedAESKey;
+    document.getElementById('fullEncryptedAESKey').textContent = encryptedData.encryptedAESKey; // Oculto
 
     // Enviar el mensaje cifrado a la API
     await storeMessage(encryptedData);
@@ -116,7 +120,7 @@ async function decryptMessage() {
     try {
         const ivBase64 = document.getElementById('iv').textContent;
         const encryptedMessageString = document.getElementById('encryptedMessage').textContent;
-        const encryptedAESKeyBase64 = document.getElementById('encryptedAESKey').textContent;
+        const encryptedAESKeyBase64 = document.getElementById('fullEncryptedAESKey').textContent; // Usar la clave completa para el descifrado
 
         if (!ivBase64 || !encryptedMessageString || !encryptedAESKeyBase64) {
             throw new Error('Faltan datos necesarios para el descifrado');
@@ -162,6 +166,14 @@ async function decryptMessage() {
     } catch (error) {
         console.error('Error en decryptMessage:', error);
         alert('Error en decryptMessage: ' + error.message);
+    }
+}
+
+function isBase64(str) {
+    try {
+        return btoa(atob(str)) === str;
+    } catch (err) {
+        return false;
     }
 }
 

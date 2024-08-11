@@ -11,14 +11,19 @@ async function loadStoredMessages() {
         listItem.addEventListener('click', () => {
             document.getElementById('encryptedMessage').textContent = message.texto;
 
-            // Verificamos que el IV y la Encrypted AES Key están en formato correcto
-            const ivBase64 = message.iv;
-            const encryptedAESKeyBase64 = message.encryptedAESKey;
-            const shortenedKey = shortenKey(encryptedAESKeyBase64);
+            // Verificamos que IV y la Clave AES Cifrada están presentes
+            if (message.iv && message.encryptedAESKey) {
+                const ivBase64 = message.iv;
+                const encryptedAESKeyBase64 = message.encryptedAESKey;
+                const shortenedKey = message.shortenedAESKey || shortenKey(encryptedAESKeyBase64);
 
-            document.getElementById('iv').textContent = ivBase64;
-            //document.getElementById('encryptedAESKey').textContent = encryptedAESKeyBase64;
-            document.getElementById('encryptedAESKey').textContent = shortenedKey;
+                // Asignamos los valores a los elementos correspondientes
+                document.getElementById('iv').textContent = ivBase64;
+                document.getElementById('encryptedAESKey').textContent = shortenedKey;
+                document.getElementById('fullEncryptedAESKey').textContent = encryptedAESKeyBase64; // Oculto
+            } else {
+                console.error('El mensaje no tiene IV o Clave AES Cifrada');
+            }
         });
         messagesList.appendChild(listItem);
     });
